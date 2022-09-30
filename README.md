@@ -1,3 +1,7 @@
+Сайт По Пицце! 
+СТЭК:
+(React, redux-toolkit, react-router, react-sleketon, scss, css3, js/ts, axios)
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
