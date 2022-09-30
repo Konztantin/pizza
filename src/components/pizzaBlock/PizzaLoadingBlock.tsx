@@ -1,7 +1,7 @@
 import React from 'react'
 import ContentLoader from "react-content-loader"
 
-function PizzaLoadingBlock() {
+const PizzaLoadingBlock: React.FC = () => {
   return (
     <ContentLoader className='pizza-block'
       speed={2}

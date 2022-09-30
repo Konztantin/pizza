@@ -1,17 +1,18 @@
 import React from 'react'
-import {  useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { Categories, PizzaBlock, Sort, PizzaLoadingBlock, Pagination } from "../components";
-import { setCategoryId, setSortId, setPageCount, setFilters, selectSort } from "../redux/slices/filterSlice";
+import { setCategoryId, setPageCount, setFilters, selectSort, FilterSlicaState } from "../redux/slices/filterSlice";
 import { sorts } from '../components/Sort';
 
-import { useSelector, useDispatch } from 'react-redux'
+import { useSelector } from 'react-redux'
 import qs from "qs"
 import { fetchPizzas, selectPizza } from '../redux/slices/pizzasSlice';
+import { useAppDispatch } from '../redux/store';
 
-function Home() {
+const Home: React.FC = () => {
   const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const isSearch = React.useRef(false)
   const isMounted = React.useRef(false)
 
@@ -21,8 +22,13 @@ function Home() {
   const getPizzas = () => {
     const category = categoryId > 0 ? `category=${categoryId}` : ""
     const search = searchValue ? `&search=${searchValue}` : ""
-    //криво работает mockAPI по input ищет только на "ВСЕ"!!!
-    dispatch(fetchPizzas({ category, search, sort, pagecount }))
+    dispatch(
+      fetchPizzas({
+        category,
+        search,
+        sort,
+        pagecount: String(pagecount)
+      }))
     window.scrollTo(0, 0)
   }
 
@@ -40,9 +46,15 @@ function Home() {
     if (window.location.search) {
       const params = qs.parse(window.location.search.substring(1))
       const sort = sorts.find(obj => obj.sort === params.sort)
-      dispatch(setFilters({
-        ...params, sort
-      }))
+      if (sort) {
+        dispatch(setFilters({
+          ...params,
+          sort,
+          categoryId: 0,
+          pagecount: 0,
+          searchValue: ''
+        }))
+      }
       isSearch.current = true
     }
   }, [])
@@ -61,27 +73,23 @@ function Home() {
   }, [sort.sort, categoryId, pagecount])
 
 
-  const changeCatagory = (index) => {
+  const changeCatagory = React.useCallback((index: number) => {
     dispatch(setCategoryId(index))
-  }
+  }, [])
 
-  const changeSort = (item) => {
-    dispatch(setSortId(item))
-  }
-
-  const changePage = (number) => {
+  const changePage = React.useCallback((number: number) => {
     dispatch(setPageCount(number))
-  }
+  }, [])
 
   // можно найти через фильтер если мало данных(перед items): .filter(obj => { return obj.title.toLowerCase().includes(searchValue.toLowerCase()) })
-  const pizzas = items.map((obj) => <PizzaBlock key={obj.id} {...obj} />)
-  const skeletons = Array(4).fill().map((_, index) => <PizzaLoadingBlock key={index} />)
+  const pizzas = items.map((obj: any) => <PizzaBlock key={obj.id} {...obj} />)
+  const skeletons = Array(4).fill('').map((_, index) => <PizzaLoadingBlock key={index} />)
 
   return (
     <div className="container">
       <div className="content__top">
         <Categories categoryId={categoryId} onChangeCategory={changeCatagory} />
-        <Sort selected={sort} onChangeSort={changeSort} />
+        <Sort sort={sort} />
       </div>
       <h2 className="content__title">Все пиццы</h2>
       {isLoading === "error" ? (

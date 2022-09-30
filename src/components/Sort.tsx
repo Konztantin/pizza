@@ -1,6 +1,20 @@
 import React from 'react'
+import { setSortId } from "../redux/slices/filterSlice";
+import { useDispatch } from 'react-redux'
 
-export const sorts = [
+type SortsListItem = {
+  name: string;
+  sort: string;
+  desc: string;
+}
+
+type PopupClick = MouseEvent & { path: Node[] }
+
+type SortProps = {
+  sort: SortsListItem
+}
+
+export const sorts: SortsListItem[] = [
   { name: "популярности (DESC)", sort: "raiting", desc: "desc" },
   { name: "популярности (ASC)", sort: "-raiting", desc: "asc" },
   { name: "цене (DESC)", sort: "price", desc: "desc" },
@@ -9,14 +23,15 @@ export const sorts = [
   { name: "алфавиту (ASC)", sort: "-title", desc: "asc" }
 ]
 
-function Sort({ selected, onChangeSort }) {
+const Sort: React.FC<SortProps> = React.memo(({ sort }) => {
+  const dispatch = useDispatch()
   const [isVisible, setIsVisible] = React.useState(false);
-  const sortRef = React.useRef()
+  const sortRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
-    const handleOutsideClick = (event) => {
-      const path = event.path
-      if (!path.includes(sortRef.current)) {
+    const handleOutsideClick = (event: MouseEvent) => {
+      const _event = event as PopupClick
+      if (sortRef.current && !_event.path.includes(sortRef.current)) {
         setIsVisible(false)
       }
     }
@@ -25,14 +40,12 @@ function Sort({ selected, onChangeSort }) {
     return () => document.body.removeEventListener('click', handleOutsideClick)
   }, [])
 
-  const changeSort = () => {
-    setIsVisible(!isVisible)
-  }
 
-  const changeSortTable = (item) => {
-    onChangeSort(item)
+  const changeSortTable = (item: SortsListItem) => {
+    dispatch(setSortId(item))
     setIsVisible(false)
   }
+
   return (
     <div ref={sortRef} className="sort">
       <div className="sort__label">
@@ -49,22 +62,22 @@ function Sort({ selected, onChangeSort }) {
           />
         </svg>
         <b>Сортировка по:</b>
-        <span onClick={changeSort}>{selected.name}</span>
+        <span onClick={() => setIsVisible(!isVisible)}>{sort.name}</span>
       </div>
       {isVisible && <div className="sort__popup">
         <ul>
           {sorts &&
-            sorts.map((obj, index) => (
+            sorts.map((obj: SortsListItem) => (
               <li
                 key={obj.name}
                 onClick={() => changeSortTable(obj)}
-                className={selected.sort === obj.sort ? "active" : ""}
+                className={sort.sort === obj.sort ? "active" : ""}
               >{obj.name}</li>
             ))}
         </ul>
       </div>}
     </div>
   )
-}
+})
 
 export default Sort
